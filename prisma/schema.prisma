@@ -1,0 +1,241 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+}
+
+model User {
+  id           Int             @id @default(autoincrement())
+  email        String          @unique
+  name         String?
+  password     String
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+  profile      UserProfile?
+  sessions     Session[]
+  searches     SavedSearch[]
+  favorites    FavoriteCity[]
+  comparisons  Comparison[]
+  chatSessions ChatSession[]
+  notifications Notification[]
+  reports      Report[]
+}
+
+model UserProfile {
+  id                Int          @id @default(autoincrement())
+  userId            Int          @unique
+  user              User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  businessName      String?
+  stage             BusinessStage @default(IDEA)
+  industry          String?
+  relocationWindow  String?
+  budgetRange       String?
+  priorities        Json?
+  currentLocation   String?
+  relocationNotes   String?      @db.Text
+  responseStyle     String?
+  language          String?      @default("en")
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+}
+
+model Session {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  token     String   @unique
+  ipAddress String?
+  userAgent String?
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+}
+
+model City {
+  id                 Int              @id @default(autoincrement())
+  slug               String           @unique
+  name               String
+  state              String
+  region             Region
+  population         Int?
+  medianIncome       Int?
+  costIndex          Float?
+  businessScore      Float?
+  blackPopulationPct Float?
+  opportunityScore   Float?
+  networkStrength    Float?
+  housingIndex       Float?
+  climate            String?
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt
+  highlights         CityHighlight[]
+  incentives         CityIncentive[]
+  industries         CityIndustry[]
+  grants             Grant[]
+  favorites          FavoriteCity[]
+  comparisonCities   ComparisonCity[]
+}
+
+model CityHighlight {
+  id      Int    @id @default(autoincrement())
+  cityId  Int
+  city    City   @relation(fields: [cityId], references: [id], onDelete: Cascade)
+  text    String
+  order   Int?
+}
+
+model CityIndustry {
+  id      Int    @id @default(autoincrement())
+  cityId  Int
+  city    City   @relation(fields: [cityId], references: [id], onDelete: Cascade)
+  name    String
+}
+
+model CityIncentive {
+  id          Int    @id @default(autoincrement())
+  cityId      Int
+  city        City   @relation(fields: [cityId], references: [id], onDelete: Cascade)
+  title       String
+  description String? @db.Text
+  url         String?
+}
+
+model Grant {
+  id        Int    @id @default(autoincrement())
+  cityId    Int
+  city      City   @relation(fields: [cityId], references: [id], onDelete: Cascade)
+  name      String
+  deadline  DateTime?
+  amount    String?
+  url       String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model SavedSearch {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  query     String
+  region    Region?
+  sortKey   String?
+  filters   Json?
+  createdAt DateTime @default(now())
+}
+
+model FavoriteCity {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  cityId    Int
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  city      City     @relation(fields: [cityId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([userId, cityId])
+}
+
+model Comparison {
+  id        Int              @id @default(autoincrement())
+  userId    Int
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String?
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+  cities    ComparisonCity[]
+}
+
+model ComparisonCity {
+  id            Int      @id @default(autoincrement())
+  comparisonId  Int
+  cityId        Int
+  comparison    Comparison @relation(fields: [comparisonId], references: [id], onDelete: Cascade)
+  city          City       @relation(fields: [cityId], references: [id], onDelete: Cascade)
+  orderIndex    Int?
+  createdAt     DateTime   @default(now())
+
+  @@unique([comparisonId, cityId])
+}
+
+model ChatSession {
+  id        Int           @id @default(autoincrement())
+  userId    Int
+  user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String?
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+  messages  ChatMessage[]
+}
+
+model ChatMessage {
+  id        Int         @id @default(autoincrement())
+  sessionId Int
+  session   ChatSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  role      MessageRole
+  content   String      @db.Text
+  metadata  Json?
+  createdAt DateTime    @default(now())
+}
+
+model Notification {
+  id        Int                  @id @default(autoincrement())
+  userId    Int
+  user      User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String
+  body      String?              @db.Text
+  category  NotificationCategory
+  readAt    DateTime?
+  createdAt DateTime             @default(now())
+}
+
+model Report {
+  id        Int         @id @default(autoincrement())
+  userId    Int
+  user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      ReportType
+  status    ReportStatus @default(PENDING)
+  payload   Json?
+  url       String?
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+}
+
+enum Region {
+  NORTHEAST
+  SOUTH
+  MIDWEST
+  WEST
+}
+
+enum MessageRole {
+  USER
+  ASSISTANT
+  SYSTEM
+}
+
+enum NotificationCategory {
+  GRANTS
+  CITY_DATA
+  NETWORK
+  SYSTEM
+}
+
+enum ReportType {
+  COMPARISON
+  RELOCATION
+  FUNDING
+  GENERAL
+}
+
+enum ReportStatus {
+  PENDING
+  READY
+  FAILED
+}
+
+enum BusinessStage {
+  IDEA
+  EARLY_REVENUE
+  GROWTH
+  SCALING
+}

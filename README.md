@@ -1,3 +1,34 @@
+# Database Setup
+
+## Manual SQL Migration
+
+If you want to manually create all tables, run the following SQL in your MySQL client:
+
+```sql
+-- (Excerpt) Full SQL is in prisma/migrations/init.sql
+-- Example:
+CREATE TABLE `User` (
+	`id` INTEGER NOT NULL AUTO_INCREMENT,
+	`email` VARCHAR(191) NOT NULL,
+	`name` VARCHAR(191) NULL,
+	`password` VARCHAR(191) NOT NULL,
+	`createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+	`updatedAt` DATETIME(3) NOT NULL,
+	UNIQUE INDEX `User_email_key`(`email`),
+	PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+-- ... (see prisma/migrations/init.sql for all tables and foreign keys)
+```
+
+## Prisma: Push Schema to Database
+
+To ensure your database matches your Prisma schema, run:
+
+```bash
+npx prisma db push --schema=prisma/schema.prisma
+```
+
+This will create or update all tables as defined in your schema.prisma.
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/pages/api-reference/create-next-app).
 
 ## Getting Started
