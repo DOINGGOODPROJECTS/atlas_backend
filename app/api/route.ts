@@ -12,6 +12,8 @@ export async function GET() {
       '/api/chatsessions',
       '/api/reports',
       '/api/notifications',
+      '/api/chat/sessions',
+      '/api/chat/messages',
       '/api/sessions',
       '/api/auth/signup',
       '/api/auth/login',
