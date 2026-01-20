@@ -30,17 +30,26 @@ export async function POST(request: Request) {
     }
 
     const token = generateToken();
-    const expiresAt = new Date(Date.now() + 1000 * 60 * 60 * 24 * 7);
+    const expiresAt = new Date(Date.now() + 1000 * 60 * 30);
     await execute<ResultSetHeader>(
       'INSERT INTO `Session` (userId, token, expiresAt) VALUES (?, ?, ?)',
       [user.id, token, expiresAt],
     );
 
-    return NextResponse.json({
+    const response = NextResponse.json({
       user: { id: user.id, email: user.email, name: user.name },
-      token,
       expiresAt,
     });
+    response.cookies.set({
+      name: 'adinkra_session',
+      value: token,
+      httpOnly: true,
+      sameSite: 'lax',
+      secure: process.env.NODE_ENV === 'production',
+      expires: expiresAt,
+      path: '/',
+    });
+    return response;
   } catch (error) {
     return NextResponse.json({ error: 'Failed to log in', details: String(error) }, { status: 500 });
   }

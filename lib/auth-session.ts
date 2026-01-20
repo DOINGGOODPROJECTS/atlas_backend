@@ -11,10 +11,31 @@ export type AuthUser = {
   id: number;
 };
 
-export async function requireAuth(request: Request): Promise<AuthUser | null> {
+const SESSION_COOKIE_NAME = 'adinkra_session';
+
+const getCookieValue = (cookieHeader: string, name: string): string | null => {
+  const parts = cookieHeader.split(';');
+  for (const part of parts) {
+    const [key, ...rest] = part.trim().split('=');
+    if (key === name) {
+      return decodeURIComponent(rest.join('='));
+    }
+  }
+  return null;
+};
+
+export function getSessionToken(request: Request): string | null {
   const header = request.headers.get('authorization') || request.headers.get('Authorization');
   const bearerToken = header?.startsWith('Bearer ') ? header.slice(7).trim() : null;
-  const token = bearerToken || request.headers.get('x-session-token');
+  const headerToken = request.headers.get('x-session-token');
+  const cookieHeader = request.headers.get('cookie') || '';
+  const cookieToken = getCookieValue(cookieHeader, SESSION_COOKIE_NAME);
+
+  return bearerToken || headerToken || cookieToken;
+}
+
+export async function requireAuth(request: Request): Promise<AuthUser | null> {
+  const token = getSessionToken(request);
 
   if (!token) return null;
 
