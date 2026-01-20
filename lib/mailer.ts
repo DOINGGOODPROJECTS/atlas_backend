@@ -8,13 +8,29 @@ type MailPayload = {
 };
 
 function getTransporter() {
-  const user = process.env.GMAIL_USER;
-  const pass = process.env.GMAIL_APP_PASSWORD;
+  const user = process.env.MAIL_USER || process.env.GMAIL_USER;
+  const pass = process.env.MAIL_PASSWORD || process.env.GMAIL_APP_PASSWORD;
 
   if (!user || !pass) return null;
 
+  const host = process.env.MAIL_HOST;
+  const port = process.env.MAIL_PORT ? Number(process.env.MAIL_PORT) : undefined;
+  const secure =
+    process.env.MAIL_SECURE?.toLowerCase() === 'true' ||
+    process.env.MAIL_SECURE === '1';
+
+  if (host) {
+    return nodemailer.createTransport({
+      host,
+      port: port || 587,
+      secure,
+      auth: { user, pass },
+    });
+  }
+
+  const service = process.env.MAIL_PROVIDER || 'gmail';
   return nodemailer.createTransport({
-    service: 'gmail',
+    service,
     auth: { user, pass },
   });
 }
