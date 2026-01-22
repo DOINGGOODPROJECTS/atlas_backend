@@ -1,0 +1,43 @@
+city_id,City,cost_index,housing_index
+atlanta_us,"Atlanta, GA",95,92
+houston_us,"Houston, TX",90,85
+dallas_us,"Dallas, TX",94,90
+charlotte_us,"Charlotte, NC",92,88
+raleigh_us,"Raleigh, NC",91,87
+durham_us,"Durham, NC",90,85
+memphis_us,"Memphis, TN",82,75
+washington_dc_us,"Washington, DC",120,130
+silver_spring_us,"Silver Spring, MD",115,125
+hyattsville_us,"Hyattsville, MD",108,115
+bowie_us,"Bowie, MD",110,120
+alexandria_us,"Alexandria, VA",118,128
+chicago_us,"Chicago, IL",98,95
+detroit_us,"Detroit, MI",85,78
+columbus_us,"Columbus, OH",88,82
+minneapolis_us,"Minneapolis, MN",96,92
+st_louis_us,"St. Louis, MO",86,80
+accra_gh,"Accra, GH",55,60
+lagos_ng,"Lagos, NG",50,55
+abidjan_ci,"Abidjan, CI",48,52
+dakar_sn,"Dakar, SN",52,58
+kumasi_gh,"Kumasi, GH",42,45
+ibadan_ng,"Ibadan, NG",40,42
+nairobi_ke,"Nairobi, KE",58,62
+kigali_rw,"Kigali, RW",50,55
+dar_es_salaam_tz,"Dar es Salaam, TZ",46,50
+johannesburg_za,"Johannesburg, ZA",60,65
+cape_town_za,"Cape Town, ZA",65,72
+pretoria_za,"Pretoria, ZA",55,58
+bridgetown_bb,"Bridgetown, BB",75,80
+kingston_jm,"Kingston, JM",60,65
+nassau_bs,"Nassau, BS",85,95
+port_of_spain_tt,"Port of Spain, TT",62,68
+salvador_br,"Salvador, BR",55,58
+cartagena_co,"Cartagena, CO",52,55
+panama_city_pa,"Panama City, PA",70,75
+medellin_co,"Medellín, CO",50,52
+toronto_ca,"Toronto, ON",115,135
+brampton_ca,"Brampton, ON",108,125
+mississauga_ca,"Mississauga, ON",110,128
+vaughan_ca,"Vaughan, ON",112,130
+ottawa_ca,"Ottawa, ON",105,118
