@@ -15,10 +15,10 @@ export async function DELETE(
   }
 
   let params: { id: string };
-  if (typeof context.params.then === 'function') {
+  if (context.params instanceof Promise) {
     params = await context.params;
   } else {
-    params = context.params as { id: string };
+    params = context.params;
   }
 
   const sessionId = Number(params.id);
