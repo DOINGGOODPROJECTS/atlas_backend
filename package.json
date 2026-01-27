@@ -10,6 +10,7 @@
     "seed": "ts-node ./seed.ts"
   },
   "dependencies": {
+    "dotenv": "^17.2.3",
     "express": "^5.2.1",
     "mysql2": "^3.11.5",
     "next": "16.1.1",

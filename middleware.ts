@@ -1,12 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-const DEFAULT_ALLOWED_ORIGIN = 'http://localhost:3000';
+
+const ALLOWED_ORIGINS = [
+  'https://adinkraatlas.richardseshie.com',
+  'http://localhost:3000'
+];
 
 function getAllowedOrigin(request: NextRequest): string {
   const origin = request.headers.get('origin') || '';
-  const configured = process.env.FRONTEND_ORIGIN || DEFAULT_ALLOWED_ORIGIN;
-
-  return origin && origin === configured ? origin : configured;
+  if (ALLOWED_ORIGINS.includes(origin)) {
+    return origin;
+  }
+  // fallback to first allowed origin
+  return ALLOWED_ORIGINS[0];
 }
 
 export function middleware(request: NextRequest) {

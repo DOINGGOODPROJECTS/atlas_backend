@@ -44,8 +44,8 @@ export async function POST(request: Request) {
       name: 'adinkra_session',
       value: token,
       httpOnly: true,
-      sameSite: 'lax',
-      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'none',
+      secure: true,
       expires: expiresAt,
       path: '/',
     });

@@ -1,6 +1,17 @@
+
 const express = require('express');
+const cors = require('cors');
 const app = express();
 const port = 5000;
+
+// Enable CORS for frontend domains
+app.use(cors({
+  origin: [
+    'https://adinkraatlas.richardseshie.com', // your static frontend
+    'http://localhost:3000' // for local dev
+  ],
+  credentials: true // if you use cookies/auth
+}));
 
 // Respond to GET request on the root route
 app.get('/', (req, res) => {
