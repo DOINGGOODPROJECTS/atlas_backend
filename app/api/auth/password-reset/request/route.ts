@@ -50,7 +50,7 @@ export async function POST(request: Request) {
     try {
       mailResult = await sendMail({
         to: email,
-        subject: 'Reset your Adinkra Atlas password',
+        subject: 'Reset your Atlas password',
         text: `Use this link to reset your password: ${resetUrl}`,
         html: `<p>Use this link to reset your password:</p><p><a href="${resetUrl}">${resetUrl}</a></p>`,
       });

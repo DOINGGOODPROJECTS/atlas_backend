@@ -1,4 +1,4 @@
--- MySQL schema for Adinkra Atlas (no Prisma required).
+-- MySQL schema for Atlas (no Prisma required).
 
 SET NAMES utf8mb4;
 SET FOREIGN_KEY_CHECKS = 0;

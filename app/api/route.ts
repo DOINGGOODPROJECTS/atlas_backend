@@ -4,7 +4,7 @@ export const runtime = 'nodejs';
 
 export async function GET() {
   return NextResponse.json({
-    message: 'Adinkra Atlas Backend API Root',
+    message: 'Atlas Backend API Root',
     endpoints: [
       '/api/cities',
       '/api/users',
