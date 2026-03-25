@@ -1,6 +1,13 @@
 import mysql from 'mysql2/promise';
 
-const databaseUrl = process.env.DATABASE_URL;
+function stripWrappingQuotes(value: string | undefined): string | undefined {
+  if (!value) return value;
+  if (value.length >= 2 && value.startsWith('"') && value.endsWith('"')) return value.slice(1, -1);
+  if (value.length >= 2 && value.startsWith("'") && value.endsWith("'")) return value.slice(1, -1);
+  return value;
+}
+
+const databaseUrl = stripWrappingQuotes(process.env.DATABASE_URL);
 
 const pool = mysql.createPool(
   databaseUrl

@@ -47,6 +47,26 @@ bun dev
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
+## Docker (Backend on a VPS)
+
+This backend runs as a Next.js server (API routes under `app/api/*`).
+
+Build + run locally or on your Hostinger VPS:
+
+```bash
+cd adinkra_atlas_backend
+docker compose -f compose.yml up -d --build
+```
+
+The container listens on port `5010` by default (see `compose.yml`). If you’re putting it behind Nginx, consider binding only to localhost on the VPS by changing the port mapping to:
+
+```yml
+ports:
+  - "127.0.0.1:5010:5010"
+```
+
+Environment variables are loaded from `adinkra_atlas_backend/.env` via `env_file:` in `compose.yml`.
+
 You can start editing the page by modifying `pages/index.tsx`. The page auto-updates as you edit the file.
 
 [API routes](https://nextjs.org/docs/pages/building-your-application/routing/api-routes) can be accessed on [http://localhost:3000/api/hello](http://localhost:3000/api/hello). This endpoint can be edited in `pages/api/hello.ts`.
