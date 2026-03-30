@@ -2,7 +2,8 @@
 const express = require('express');
 const cors = require('cors');
 const app = express();
-const port = 5000;
+const port = process.env.PORT || 5030;
+const hostname = process.env.HOSTNAME || '0.0.0.0';
 
 // Enable CORS for frontend domains
 app.use(cors({
@@ -34,6 +35,8 @@ app.all('*', (req, res) => {
 });
 
 // Start the server
-app.listen(port, () => {
-  console.log(`listening at http://localhost:${port}`);
-}); 
+app.listen(port, hostname, () => {
+  console.log(`listening at http://${hostname}:${port}`);
+});
+
+module.exports = app;

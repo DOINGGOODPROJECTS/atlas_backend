@@ -17,7 +17,7 @@ RUN npm prune --omit=dev
 
 FROM base AS runner
 ENV NODE_ENV=production
-ENV PORT=5010
+ENV PORT=5030
 ENV HOSTNAME=0.0.0.0
 
 COPY --from=build --chown=node:node /app/package.json ./package.json
@@ -26,6 +26,6 @@ COPY --from=build --chown=node:node /app/.next ./.next
 COPY --from=build --chown=node:node /app/next.config.ts ./next.config.ts
 
 USER node
-EXPOSE 5010
+EXPOSE 5030
 
-CMD ["sh", "-c", "./node_modules/.bin/next start -p ${PORT:-5010} -H ${HOSTNAME:-0.0.0.0}"]
+CMD ["sh", "-c", "./node_modules/.bin/next start -p ${PORT:-5030} -H ${HOSTNAME:-0.0.0.0}"]
