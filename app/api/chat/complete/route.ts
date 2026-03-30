@@ -62,7 +62,7 @@ export async function POST(request: Request) {
 
     await execute<ResultSetHeader>('INSERT INTO `ChatMessage` (sessionId, role, content) VALUES (?, ?, ?)', [sessionId, 'USER', message]);
 
-    const rows = await query<{ role: string; content: string }[]>('SELECT role, content FROM `ChatMessage` WHERE sessionId = ? ORDER BY createdAt ASC', [sessionId]);
+    const rows = await query<{ role: string; content: string }>('SELECT role, content FROM `ChatMessage` WHERE sessionId = ? ORDER BY createdAt ASC', [sessionId]);
     const messages = rows.map((r) => ({ role: r.role === 'ASSISTANT' ? 'assistant' : 'user', content: r.content }));
 
     // Optional system prompt

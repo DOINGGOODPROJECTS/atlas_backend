@@ -44,7 +44,7 @@ export async function POST(request: Request) {
 
     const systemPrompt = process.env.OPENAI_SYSTEM_PROMPT?.trim();
 
-    const rows = await query<{ role: string; content: string }[]>('SELECT role, content FROM `ChatMessage` WHERE sessionId = ? ORDER BY createdAt ASC', [sessionId]);
+    const rows = await query<{ role: string; content: string }>('SELECT role, content FROM `ChatMessage` WHERE sessionId = ? ORDER BY createdAt ASC', [sessionId]);
     const messages = rows.map((r) => ({ role: r.role === 'ASSISTANT' ? 'assistant' : 'user', content: r.content }));
     const openAiMessages: { role: string; content: string }[] = [];
     if (systemPrompt) openAiMessages.push({ role: 'system', content: systemPrompt });
