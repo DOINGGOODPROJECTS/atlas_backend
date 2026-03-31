@@ -3,6 +3,7 @@ import { execute, query } from '@/lib/db';
 import { requireAuth } from '@/lib/auth-session';
 import type { ResultSetHeader } from 'mysql2/promise';
 import { allowRequest } from '@/lib/rate-limit';
+import { extractMakeAssistantText, extractMakeError, parseMakeWebhookResponse } from '@/lib/make-webhook';
 
 export const runtime = 'nodejs';
 
@@ -38,7 +39,71 @@ export async function POST(request: Request) {
     await execute<ResultSetHeader>('INSERT INTO `ChatMessage` (sessionId, role, content) VALUES (?, ?, ?)', [sessionId, 'USER', message]);
 
     const OPENAI_KEY = process.env.OPENAI_API_KEY;
-    if (!OPENAI_KEY) return NextResponse.json({ error: 'OPENAI_API_KEY not configured' }, { status: 500 });
+    if (!OPENAI_KEY) {
+      const webhookUrl = process.env.MAKE_WEBHOOK_URL;
+      if (!webhookUrl) {
+        return NextResponse.json({ error: 'OPENAI_API_KEY not configured' }, { status: 500 });
+      }
+
+      const users = await query<{ id: number; email: string; name: string | null }>(
+        'SELECT id, email, name FROM `User` WHERE id = ?',
+        [authUser.id],
+      );
+      const user = users[0] || { id: authUser.id, email: '', name: null };
+
+      const webhookResponse = await fetch(webhookUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(process.env.MAKE_WEBHOOK_API_KEY
+            ? { 'x-make-apikey': process.env.MAKE_WEBHOOK_API_KEY }
+            : {}),
+        },
+        body: JSON.stringify({
+          message,
+          threadId: `user-${authUser.id}`,
+          user,
+        }),
+      });
+
+      const raw = await webhookResponse.text();
+      const parsed = parseMakeWebhookResponse(raw);
+
+      if (!webhookResponse.ok) {
+        return NextResponse.json(
+          { error: extractMakeError(raw, parsed) || 'Unable to get AI response.' },
+          { status: webhookResponse.status },
+        );
+      }
+
+      const reply = extractMakeAssistantText(raw, parsed) || 'Unable to get response.';
+
+      await execute<ResultSetHeader>(
+        'INSERT INTO `ChatMessage` (sessionId, role, content) VALUES (?, ?, ?)',
+        [sessionId, 'ASSISTANT', reply],
+      );
+      await execute<ResultSetHeader>('UPDATE `ChatSession` SET updatedAt = CURRENT_TIMESTAMP WHERE id = ?', [sessionId]);
+
+      const encoder = new TextEncoder();
+      const tokens = reply.replace(/\r?\n/g, ' ').match(/.{1,32}/g) || [];
+      const stream = new ReadableStream({
+        start(controller) {
+          for (const token of tokens) {
+            controller.enqueue(encoder.encode(`data: ${token}\n\n`));
+          }
+          controller.enqueue(encoder.encode('data: [DONE]\n\n'));
+          controller.close();
+        },
+      });
+
+      return new Response(stream, {
+        headers: {
+          'Content-Type': 'text/event-stream; charset=utf-8',
+          'Cache-Control': 'no-cache, no-transform',
+          Connection: 'keep-alive',
+        },
+      });
+    }
 
     const model = process.env.OPENAI_MODEL || 'gpt-3.5-turbo';
 

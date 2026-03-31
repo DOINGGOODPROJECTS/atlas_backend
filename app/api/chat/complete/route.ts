@@ -3,6 +3,11 @@ import { execute, query } from '@/lib/db';
 import { requireAuth } from '@/lib/auth-session';
 import type { ResultSetHeader } from 'mysql2/promise';
 import { allowRequest } from '@/lib/rate-limit';
+import {
+  extractMakeAssistantText,
+  extractMakeError,
+  parseMakeWebhookResponse,
+} from '@/lib/make-webhook';
 
 export const runtime = 'nodejs';
 
@@ -62,20 +67,70 @@ export async function POST(request: Request) {
 
     await execute<ResultSetHeader>('INSERT INTO `ChatMessage` (sessionId, role, content) VALUES (?, ?, ?)', [sessionId, 'USER', message]);
 
-    const rows = await query<{ role: string; content: string }>('SELECT role, content FROM `ChatMessage` WHERE sessionId = ? ORDER BY createdAt ASC', [sessionId]);
-    const messages = rows.map((r) => ({ role: r.role === 'ASSISTANT' ? 'assistant' : 'user', content: r.content }));
+    let reply: string = 'Unable to get response.';
 
-    // Optional system prompt
-    const systemPrompt = process.env.OPENAI_SYSTEM_PROMPT?.trim();
-    const openAiMessages = [] as { role: string; content: string }[];
-    if (systemPrompt) openAiMessages.push({ role: 'system', content: systemPrompt });
-    openAiMessages.push(...messages);
-    openAiMessages.push({ role: 'user', content: message });
+    const openAiKeyConfigured = Boolean(process.env.OPENAI_API_KEY);
+    if (openAiKeyConfigured) {
+      const rows = await query<{ role: string; content: string }>(
+        'SELECT role, content FROM `ChatMessage` WHERE sessionId = ? ORDER BY createdAt ASC',
+        [sessionId],
+      );
+      const messages = rows.map((r) => ({
+        role: r.role === 'ASSISTANT' ? 'assistant' : 'user',
+        content: r.content,
+      }));
 
-    const assistantText = await callOpenAI(openAiMessages);
-    const reply = assistantText ?? 'Unable to get response.';
+      const systemPrompt = process.env.OPENAI_SYSTEM_PROMPT?.trim();
+      const openAiMessages: { role: string; content: string }[] = [];
+      if (systemPrompt) openAiMessages.push({ role: 'system', content: systemPrompt });
+      openAiMessages.push(...messages);
 
-    await execute<ResultSetHeader>('INSERT INTO `ChatMessage` (sessionId, role, content) VALUES (?, ?, ?)', [sessionId, 'ASSISTANT', reply]);
+      const assistantText = await callOpenAI(openAiMessages);
+      reply = assistantText ?? reply;
+    } else {
+      const webhookUrl = process.env.MAKE_WEBHOOK_URL;
+      if (!webhookUrl) {
+        throw new Error('OPENAI_API_KEY not configured and MAKE_WEBHOOK_URL not configured');
+      }
+
+      const users = await query<{ id: number; email: string; name: string | null }>(
+        'SELECT id, email, name FROM `User` WHERE id = ?',
+        [authUser.id],
+      );
+      const user = users[0] || { id: authUser.id, email: '', name: null };
+
+      const webhookResponse = await fetch(webhookUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(process.env.MAKE_WEBHOOK_API_KEY
+            ? { 'x-make-apikey': process.env.MAKE_WEBHOOK_API_KEY }
+            : {}),
+        },
+        body: JSON.stringify({
+          message,
+          threadId: `user-${authUser.id}`,
+          user,
+        }),
+      });
+
+      const raw = await webhookResponse.text();
+      const parsed = parseMakeWebhookResponse(raw);
+
+      if (!webhookResponse.ok) {
+        return NextResponse.json(
+          { error: extractMakeError(raw, parsed) || 'Unable to get AI response.' },
+          { status: webhookResponse.status },
+        );
+      }
+
+      reply = extractMakeAssistantText(raw, parsed) || reply;
+    }
+
+    await execute<ResultSetHeader>(
+      'INSERT INTO `ChatMessage` (sessionId, role, content) VALUES (?, ?, ?)',
+      [sessionId, 'ASSISTANT', reply],
+    );
     await execute<ResultSetHeader>('UPDATE `ChatSession` SET updatedAt = CURRENT_TIMESTAMP WHERE id = ?', [sessionId]);
 
     return NextResponse.json({ sessionId, reply });

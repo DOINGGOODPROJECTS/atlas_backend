@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { execute, query } from '@/lib/db';
 import { requireAuth } from '@/lib/auth-session';
 import type { ResultSetHeader } from 'mysql2/promise';
+import { extractMakeAssistantText, parseMakeWebhookResponse } from '@/lib/make-webhook';
 
 export const runtime = 'nodejs';
 
@@ -76,16 +77,8 @@ export async function POST(request: Request) {
     });
 
     const raw = await webhookResponse.text();
-    let parsed: any = null;
-    try {
-      const trimmed = raw.trim();
-      parsed = trimmed ? JSON.parse(trimmed) : null;
-    } catch {
-      parsed = null;
-    }
-
-    const assistantText =
-      parsed?.reply || parsed?.response || parsed?.text || raw || 'Unable to get response.';
+    const parsed = parseMakeWebhookResponse(raw);
+    const assistantText = extractMakeAssistantText(raw, parsed) || 'Unable to get response.';
 
     await execute<ResultSetHeader>(
       'INSERT INTO `ChatMessage` (sessionId, role, content) VALUES (?, ?, ?)',

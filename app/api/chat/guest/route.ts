@@ -1,29 +1,15 @@
 import { NextResponse } from "next/server";
+import {
+  extractMakeAssistantText,
+  extractMakeError,
+  parseMakeWebhookResponse,
+} from "@/lib/make-webhook";
 
 export const runtime = "nodejs";
 
 type GuestChatPayload = {
   message?: string;
   guestId?: string;
-};
-
-type WebhookResponse =
-  | {
-      reply?: string;
-      response?: string;
-      text?: string;
-      error?: string;
-    }
-  | null;
-
-const parseWebhookResponse = (raw: string): WebhookResponse => {
-  const trimmed = raw.trim();
-  if (!trimmed) return null;
-  try {
-    return JSON.parse(trimmed) as WebhookResponse;
-  } catch {
-    return null;
-  }
 };
 
 export async function POST(request: Request) {
@@ -69,21 +55,19 @@ export async function POST(request: Request) {
     });
 
     const raw = await webhookResponse.text();
-    const parsed = parseWebhookResponse(raw);
+    const parsed = parseMakeWebhookResponse(raw);
 
     if (!webhookResponse.ok) {
       return NextResponse.json(
-        { error: parsed?.error || "Unable to get AI response." },
+        { error: extractMakeError(raw, parsed) || "Unable to get AI response." },
         { status: webhookResponse.status },
       );
     }
 
-    const assistantText =
-      parsed?.reply ||
-      parsed?.response ||
-      parsed?.text ||
-      raw ||
-      "Thanks for the context. How can I help next?";
+    const assistantText = extractMakeAssistantText(
+      raw,
+      parsed,
+    ) || "Thanks for the context. How can I help next?";
 
     return NextResponse.json({ reply: assistantText });
   } catch (error) {
@@ -96,4 +80,3 @@ export async function POST(request: Request) {
     );
   }
 }
-
