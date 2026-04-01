@@ -94,7 +94,7 @@ async function main() {
         climate: 'Humid subtropical',
         highlights: [
           'Global fintech & logistics hub',
-          'Top Black entrepreneur network',
+          'Top underrepresented entrepreneur network',
           'Strong airport connectivity',
         ],
         industries: ['Fintech', 'Logistics', 'Media'],
@@ -245,7 +245,7 @@ async function main() {
         '$50k-$150k',
         JSON.stringify(['Cost', 'Network', 'Grants']),
         'New York, NY',
-        'Seeking strong Black founder ecosystem and funding.',
+        'Seeking a strong underrepresented founder ecosystem and funding.',
         'Concise',
       ],
     );
