@@ -24,6 +24,23 @@ const tryParseJson = (value: string): unknown | null => {
   const trimmed = value.trim();
   if (!trimmed) return null;
   if (!trimmed.startsWith('{') && !trimmed.startsWith('[')) return null;
+
+  const tryParse = (candidate: string) => {
+    try {
+      return JSON.parse(candidate) as unknown;
+    } catch {
+      return null;
+    }
+  };
+
+  const parsed = tryParse(trimmed);
+  if (parsed !== null) return parsed;
+
+  // Some webhook flows return JSON as an escaped string like: { \"reply\": \"...\" }
+  // which is not valid JSON until we remove the backslashes before quotes.
+  const repaired = trimmed.replace(/\\\"/g, '"');
+  if (repaired !== trimmed) return tryParse(repaired);
+
   try {
     return JSON.parse(trimmed) as unknown;
   } catch {
